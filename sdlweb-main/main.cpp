@@ -1,15 +1,18 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
 #include <vector>
 #include <cmath>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_render.h>
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <emscripten.h>
+#include <UiManager.h>
+
 
 
 //Define global variables
@@ -65,116 +68,6 @@ private:
     SDL_AudioDeviceID device_id;
 };
 
-
-//UI Classes
-class StaticImage {
-public:
-    StaticImage(){}
-    
-    StaticImage(SDL_Renderer* render, const char* imageName, int x, int y, int w, int h, int imagew, int imageh) {
-        this->destrect.x = x;
-        this->destrect.y = y;
-        this->destrect.w = w;
-        this->destrect.h = h;
-
-        this->srcrect.x = 0;
-        this->srcrect.y = 0;
-        this->srcrect.w = imagew;
-        this->srcrect.h = imageh;
-
-        this->render = render;
-        
-        this->image = IMG_LoadTexture(this->render, imageName);
-        if (image == NULL) {
-            printf("Failed to load image \n");
-        }
-    }
-
-    void SetPosition(int x, int y) {
-        this->destrect.x = x;
-        this->destrect.y = y;
-    }
-
-    void Draw() {
-        SDL_RenderCopy(this->render, image, &srcrect, &destrect);
-    }
-
-private:
-    SDL_Rect srcrect;
-    SDL_Texture* image;
-    SDL_Renderer* render;
-
-protected:
-    SDL_Rect destrect;
-};
-
-class Button : public StaticImage {
-public:
-    Button(SDL_Renderer* render, const char* imageName, int x, int y, int w, int h, int imagew, int imageh):StaticImage(render, imageName, x, y, w, h, imagew, imageh) {
- 
-    }
-
-    bool ClickHandler(int mousex, int mousey) {
-        if (mousex < destrect.x || mousex > destrect.x + destrect.w) {
-            return false;
-        }
-        else if (mousey < destrect.y || mousey > destrect.y + destrect.h) {
-            return false;
-        }
-        return true;
-    }
-
-    void SetActive(bool newActive) {
-            this->active = newActive;     
-    }
-
-    bool GetActive() {
-        return this->active;
-    }
-
-    void Draw() {
-        printf("This gets called \n");
-        if (active == true) {
-            StaticImage::Draw();
-        }
-    }
-
-private:
-    bool active;
-};
-
-int font_size = 64;
-SDL_Color font_color = { 255,255,255,255 };
-TTF_Font* font;
-class Text {
-public:
-    Text(std::string displayText, int x, int y) {
-        this->displayText = displayText.c_str();
-        //text_surface = TTF_RenderText_Solid(font, this->displayText, font_color);
-        text_surface = TTF_RenderText_Blended(font, this->displayText, font_color);
-        text_texture = SDL_CreateTextureFromSurface(renderer, text_surface);
-        textRect = { x, y, text_surface->w, text_surface->h };
-    }
-
-    void SetText(std::string newText) {
-        this->displayText = newText.c_str();
-        text_surface = TTF_RenderText_Blended(font, this->displayText, font_color);
-        text_texture = SDL_CreateTextureFromSurface(renderer, text_surface);
-    }
-
-    void Draw() {
-        SDL_FreeSurface(text_surface);
-        SDL_RenderCopy(renderer, text_texture, NULL, &textRect);
-        //SDL_DestroyTexture(text_texture);
-    }
-private:
-    const char* displayText;
-    int font_size;
-    SDL_Color font_color = { 255,255,255,255 };
-    SDL_Surface* text_surface;
-    SDL_Texture* text_texture;
-    SDL_Rect textRect;
-};
 
 //Gameplay classes
 
@@ -264,15 +157,27 @@ void renderingBasics() {
     mousey = (int)(mouse.y);
 }
 
-Text fpsText = Text("FPS is", 100, 100);
+
+UiManager uiManager;
+
+
 void mainMenue() {
     
+    uiManager.addNewGroup();
     
+    StaticImage test = StaticImage(renderer, "res/logo.png", 100, 100, 100, 100, 1980, 1080);
+    Text fpsText = Text(renderer, "FPS is", 100, 100);
     
+    uiManager.addUi(0, test); //id 0
+    uiManager.addUi(0, fpsText); //id 1
+
+    
+    StaticImage* testText = uiManager.getUi(0, 0, test);
+    //testText->SetPosition(500,500);
+
     while (true) {
         renderingBasics();
-        fpsText.SetText(std::to_string(fps));
-        fpsText.Draw();
+        uiManager.renderUi();
     }
 }
 

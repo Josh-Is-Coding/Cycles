@@ -28,4 +28,9 @@
   <ItemGroup>
     <None Include="web\index.html" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="UiManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>
