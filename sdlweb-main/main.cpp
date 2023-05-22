@@ -17,7 +17,7 @@
 
 //Define global variables
 const char* title = "web test";
-int width = 550, height = 737;
+int width = 737, height = 550;
 SDL_Renderer* renderer;
 SDL_Window* window;
 SDL_Texture* screen;
@@ -172,8 +172,8 @@ void mainMenue() {
     uiManager.addUi(0, fpsText); //id 1
 
     
-    StaticImage* testText = uiManager.getUi(0, 0, test);
-    //testText->SetPosition(500,500);
+    uiManager.getUi(0, 0, test)->SetPosition(0,0);
+    uiManager.getUi(0, 1, fpsText)->SetText("fuck you fuckers");
 
     while (true) {
         renderingBasics();

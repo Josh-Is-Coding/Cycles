@@ -81,7 +81,7 @@ private:
     bool active;
 };
 
-int font_size = 64;
+int font_size = 24;
 SDL_Color font_color = { 255,255,255,255 };
 TTF_Font* font;
 class Text {
@@ -99,6 +99,8 @@ public:
         this->displayText = newText.c_str();
         text_surface = TTF_RenderText_Blended(font, this->displayText, font_color);
         text_texture = SDL_CreateTextureFromSurface(renderer, text_surface);
+        text_texture = SDL_CreateTextureFromSurface(renderer, text_surface);
+        textRect = { textRect.x, textRect.y, text_surface->w, text_surface->h };
     }
 
     void Draw() {
@@ -201,27 +203,25 @@ public:
     }
 
     StaticImage* getUi(int groupNumber, int uiId, StaticImage overrider) {
-        UiGroup currentUiGroup = uiGroups[groupNumber];
+        UiGroup* currentUiGroup = &(uiGroups[groupNumber]);
         int currentUiType = 0;
-        int index = std::count(currentUiGroup.order.begin(), currentUiGroup.order.end(), currentUiType) - 1;
-        currentUiGroup.staticImages[0].SetPosition(700, 700);
-        uiGroups[0].staticImages[0].SetPosition(400, 900);
-        StaticImage& rightImage = currentUiGroup.staticImages[0];
-        currentUiGroup.staticImages[0].SetPosition(900,900);
-        //rightImage.SetPosition(700, 700);
-        return &rightImage;
+        int index = std::count(currentUiGroup->order.begin(), currentUiGroup->order.end(), currentUiType) - 1;
+        StaticImage* selectedImage = &(currentUiGroup->staticImages[index]);
+        return selectedImage;
     }
     Button* getUi(int groupNumber, int uiId, Button overrider) {
-        UiGroup currentUiGroup = uiGroups[groupNumber];
+        UiGroup* currentUiGroup = &(uiGroups[groupNumber]);
         int currentUiType = 1;
-        int index = std::count(currentUiGroup.order.begin(), currentUiGroup.order.end(), currentUiType) - 1;
-        return &currentUiGroup.buttons[index];
+        int index = std::count(currentUiGroup->order.begin(), currentUiGroup->order.end(), currentUiType) - 1;
+        Button* selectedButton = &(currentUiGroup->buttons[index]);
+        return selectedButton;
     }
     Text* getUi(int groupNumber, int uiId, Text overrider) {
-        UiGroup currentUiGroup = uiGroups[groupNumber];
+        UiGroup* currentUiGroup = &(uiGroups[groupNumber]);
         int currentUiType = 2;
-        int index = std::count(currentUiGroup.order.begin(), currentUiGroup.order.end(), currentUiType) - 1;
-        return &currentUiGroup.texts[index];
+        int index = std::count(currentUiGroup->order.begin(), currentUiGroup->order.end(), currentUiType) - 1;
+        Text* selectedText = &(currentUiGroup->texts[index]);
+        return selectedText;
     }
 
 private:
