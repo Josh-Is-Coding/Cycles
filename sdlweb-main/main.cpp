@@ -12,6 +12,8 @@
 #include <AL/alc.h>
 #include <emscripten.h>
 #include <UiManager.h>
+#include <emscripten/html5.h>
+
 
 
 
@@ -161,33 +163,81 @@ void renderingBasics() {
 UiManager uiManager;
 
 
+void mainGame() {
+    renderingBasics();
+}
+
+void startGame() {
+    printf("starting the game \n");
+    emscripten_cancel_main_loop();
+    emscripten_set_main_loop(mainGame, 0, 1);
+}
+
 void mainMenue() {
     
     uiManager.addNewGroup();
     
     StaticImage test = StaticImage(renderer, "res/logo.png", 100, 100, 100, 100, 1980, 1080);
     Text fpsText = Text(renderer, "FPS is", 100, 100);
+    Button playButton = Button(renderer, "res/UI/button.png", 62, 300, 400, 100, 1241, 326, startGame);
     
     uiManager.addUi(0, test); //id 0
     uiManager.addUi(0, fpsText); //id 1
+    uiManager.addUi(0, playButton); //id 2
 
     
-    uiManager.getUi(0, 0, test)->SetPosition(0,0);
-    uiManager.getUi(0, 1, fpsText)->SetText("fuck you fuckers");
+    uiManager.getUi(0, 0, test)->SetPosition(100,0);
+    
+    
 
     while (true) {
+
+       
+
+        //while (SDL_PollEvent(&event))
+        //{
+        //    switch (event.type)
+        //    {
+        //    case SDL_KEYDOWN:
+        //        break;
+        //    case SDL_MOUSEBUTTONDOWN:
+        //        if (event.button.button == SDL_BUTTON_LEFT) {
+        //            printf("left clicked \n");
+        //            bool isUiButton = uiManager.buttonClickCheck(mousex, mousey);
+        //            
+        //            if (isUiButton == false) {
+        //                printf("no clcikable ui surface \n");
+        //            }
+        //            else {
+        //                printf("clicked surface \n");
+        //            }
+        //        }
+        //        break;
+        //    }
+        //}
+
         renderingBasics();
         uiManager.renderUi();
+        uiManager.getUi(0, 1, fpsText)->SetText(std::to_string(fps));
     }
 }
 
+EM_BOOL mouse_callback(int eventType, const EmscriptenMouseEvent* e, void* userData) {
+    if (eventType == EMSCRIPTEN_EVENT_CLICK) {
+        bool isUiButton = uiManager.buttonClickCheck(mousex, mousey);
+        //printf("the mouse pos is %d , %d \n", mousex, mousey);
+    }
+    return 0;
+}
 
 //Main loop that runs
 int main() {
      init();//initilises variables used in the program
+     emscripten_set_click_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, 0, 1, mouse_callback);
      while(running) {      
           renderingBasics();
-          mainMenue();
+          emscripten_set_main_loop(mainMenue, 0, 1);
+          //mainMenue();
      }
      quit();
      return 0;

@@ -5,6 +5,7 @@
 #include <SDL2/SDL_render.h>
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <functional>
 class StaticImage {
 public:
     StaticImage() {}
@@ -46,10 +47,13 @@ protected:
     SDL_Rect destrect;
 };
 
+typedef void (*ButtonEvent)();
+
 class Button : public StaticImage {
 public:
-    Button(SDL_Renderer* render, const char* imageName, int x, int y, int w, int h, int imagew, int imageh) :StaticImage(render, imageName, x, y, w, h, imagew, imageh) {
-
+    Button(SDL_Renderer* render, const char* imageName, int x, int y, int w, int h, int imagew, int imageh, ButtonEvent buttonEvent) :StaticImage(render, imageName, x, y, w, h, imagew, imageh) {
+        this->buttonEvent = buttonEvent;
+        this->active = true;
     }
 
     bool ClickHandler(int mousex, int mousey) {
@@ -59,6 +63,7 @@ public:
         else if (mousey < destrect.y || mousey > destrect.y + destrect.h) {
             return false;
         }
+        buttonEvent();
         return true;
     }
 
@@ -71,7 +76,6 @@ public:
     }
 
     void Draw() {
-        printf("This gets called \n");
         if (active == true) {
             StaticImage::Draw();
         }
@@ -79,6 +83,7 @@ public:
 
 private:
     bool active;
+    ButtonEvent buttonEvent;
 };
 
 int font_size = 24;
@@ -222,6 +227,20 @@ public:
         int index = std::count(currentUiGroup->order.begin(), currentUiGroup->order.end(), currentUiType) - 1;
         Text* selectedText = &(currentUiGroup->texts[index]);
         return selectedText;
+    }
+
+    bool buttonClickCheck(int xMousePos, int yMousePos) {
+        for (int i = 0; i < uiGroups.size(); i++) {
+            if (uiGroups[i].active == false) {
+                continue;
+            }
+            for (int j = 0; j < uiGroups[i].buttons.size(); j++) {
+                if (uiGroups[i].buttons[j].ClickHandler(xMousePos, yMousePos) == true) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 private:
