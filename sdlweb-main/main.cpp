@@ -10,6 +10,7 @@
 #include <SDL2/SDL_render.h>
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <stdio.h>
 #include <emscripten.h>
 #include <UiManager.h>
 #include <emscripten/html5.h>
@@ -33,6 +34,7 @@ Uint32 mousestate;
 SDL_Event event;
 bool running;
 SDL_Color bkg = { 14, 149, 148};
+
 
 int scene = 0;
 
@@ -70,8 +72,60 @@ private:
     SDL_AudioDeviceID device_id;
 };
 
+struct SquareData {
+    SDL_Point vertices[5];
+    SDL_Color color;
+};
 
 //Gameplay classes
+class SquareRendererPooling {
+public:
+    SquareRendererPooling() {
+        SDL_Fill
+        SDL_RenderGeometry()
+    }
+
+    static void addSquare(SDL_Point topLeft, SDL_Point bottomLeft, SDL_Point topRight, SDL_Point bottomRight, SDL_Color squareColor) {
+        if (squaresRenderingThisFrame > squaresPool.size()-1) {
+            SquareData newSquare;
+            newSquare.vertices[0] = topLeft;
+            newSquare.vertices[1] = topRight;
+            newSquare.vertices[2] = bottomRight;
+            newSquare.vertices[3] = bottomLeft;
+            newSquare.vertices[4] = topLeft;
+            newSquare.color = squareColor;
+
+            squaresPool.push_back(newSquare);
+        }
+        else {
+            squaresPool[squaresRenderingThisFrame].vertices[0] = topLeft;
+            squaresPool[squaresRenderingThisFrame].vertices[1] = bottomLeft;
+            squaresPool[squaresRenderingThisFrame].vertices[2] = topRight;
+            squaresPool[squaresRenderingThisFrame].vertices[3] = bottomRight;
+            squaresPool[squaresRenderingThisFrame].color = squareColor;
+        }
+        squaresRenderingThisFrame++;
+    }
+
+    static void renderSquares() {
+        for (int i = 1; i < squaresRenderingThisFrame; i++) {
+            //SDL_SetRenderDrawColor(renderer, squaresPool[i].color.r, squaresPool[i].color.g, squaresPool[i].color.b, squaresPool[i].color.a);
+            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+            SDL_RenderDrawLines(renderer, squaresPool[i].vertices, 5);
+            //SDL_RenderDrawRect(renderer, &squaresPool[i]);
+        }
+        //SDL_Color colors = {};
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        SquareRendererPooling::squaresRenderingThisFrame = 0;
+    }
+
+private:
+
+    static int squaresRenderingThisFrame;
+    static std::vector<SquareData> squaresPool;
+};
+int SquareRendererPooling::squaresRenderingThisFrame = 0;
+std::vector<SquareData> SquareRendererPooling::squaresPool;
 
 
 //Desfine methods and functions
@@ -165,11 +219,28 @@ UiManager uiManager;
 
 void mainGame() {
     renderingBasics();
+    SquareRendererPooling squareRenderer;
+    
+    SDL_Rect testRect = { 0,0,100,100 };
+    //SDL_RenderFillRect(renderer, &testRect);
+    SDL_Color red = { 255,0,0,1 };
+
+    while (true) {
+        renderingBasics();
+        uiManager.renderUi();
+        SquareRendererPooling::renderSquares();
+
+        squareRenderer.addSquare({ 0,0 }, { 0,0 }, { 0,0 }, { 0,0 }, red);
+        //squareRenderer.addSquare({ 0,0 }, { 100,0 }, { 100,100 }, { 0,100 }, red);
+        squareRenderer.addSquare({ 0,0 }, { 100, 50 }, { 100,150 }, { 0,100 }, red);
+    }
 }
 
 void startGame() {
     printf("starting the game \n");
     emscripten_cancel_main_loop();
+    SDL_Delay(10);
+    uiManager.setGroupActive(0, false);
     emscripten_set_main_loop(mainGame, 0, 1);
 }
 
@@ -222,6 +293,8 @@ void mainMenue() {
     }
 }
 
+
+
 EM_BOOL mouse_callback(int eventType, const EmscriptenMouseEvent* e, void* userData) {
     if (eventType == EMSCRIPTEN_EVENT_CLICK) {
         bool isUiButton = uiManager.buttonClickCheck(mousex, mousey);
@@ -230,10 +303,35 @@ EM_BOOL mouse_callback(int eventType, const EmscriptenMouseEvent* e, void* userD
     return 0;
 }
 
+EM_BOOL touch_callback(int eventType, const EmscriptenTouchEvent* e, void* userData)
+{
+    for (int i = 0; i < (e->numTouches)+1; ++i)
+    {
+        int touchX = e->touches[i].targetX;
+        int touchY = e->touches[i].targetY;
+        bool isUiButton = uiManager.buttonClickCheck(touchX, touchY);
+    }
+
+    return 0;
+}
+
 //Main loop that runs
 int main() {
+    int isMobile = 0;
+      isMobile = EM_ASM_INT({
+    return/Mobi|Android/i.test(navigator.userAgent);
+          });
      init();//initilises variables used in the program
-     emscripten_set_click_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, 0, 1, mouse_callback);
+
+     if (isMobile == 0){
+         emscripten_set_click_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, 0, 1, mouse_callback);
+     }
+     else {
+         emscripten_set_touchstart_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, 0, 1, touch_callback);
+     }
+     
+     
+
      while(running) {      
           renderingBasics();
           emscripten_set_main_loop(mainMenue, 0, 1);
