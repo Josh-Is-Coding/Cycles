@@ -74,6 +74,7 @@ private:
 
 struct SquareData {
     SDL_Point vertices[5];
+    SDL_Vertex vertex[5];
     SDL_Color color;
 };
 
@@ -81,41 +82,101 @@ struct SquareData {
 class SquareRendererPooling {
 public:
     SquareRendererPooling() {
-        SDL_Fill
-        SDL_RenderGeometry()
+        //SDL_geomet
+        
     }
 
     static void addSquare(SDL_Point topLeft, SDL_Point bottomLeft, SDL_Point topRight, SDL_Point bottomRight, SDL_Color squareColor) {
         if (squaresRenderingThisFrame > squaresPool.size()-1) {
             SquareData newSquare;
-            newSquare.vertices[0] = topLeft;
-            newSquare.vertices[1] = topRight;
-            newSquare.vertices[2] = bottomRight;
-            newSquare.vertices[3] = bottomLeft;
-            newSquare.vertices[4] = topLeft;
+            newSquare.vertex[0].position.x = topLeft.x;
+            newSquare.vertex[0].position.y = topLeft.y;
+            newSquare.vertex[0].tex_coord.x = 0;
+            newSquare.vertex[0].tex_coord.y = 0;
+            newSquare.vertex[1].position.x = bottomLeft.x;
+            newSquare.vertex[1].position.y = bottomLeft.y;
+            newSquare.vertex[1].tex_coord.x = 0;
+            newSquare.vertex[1].tex_coord.y = 1;
+            newSquare.vertex[2].position.x = topRight.x;
+            newSquare.vertex[2].position.y = topRight.y;
+            newSquare.vertex[2].tex_coord.x = 1;
+            newSquare.vertex[2].tex_coord.y = 0;
+            newSquare.vertex[3].position.x = bottomRight.x;
+            newSquare.vertex[3].position.y = bottomRight.y;
+            newSquare.vertex[3].tex_coord.x = 1;
+            newSquare.vertex[3].tex_coord.y = 1;
+            newSquare.vertex[4].position.x = topLeft.x;
+            newSquare.vertex[4].position.y = topLeft.y;
+            newSquare.vertex[4].tex_coord.x = 0;
+            newSquare.vertex[4].tex_coord.y = 0;
             newSquare.color = squareColor;
 
             squaresPool.push_back(newSquare);
         }
         else {
-            squaresPool[squaresRenderingThisFrame].vertices[0] = topLeft;
-            squaresPool[squaresRenderingThisFrame].vertices[1] = bottomLeft;
-            squaresPool[squaresRenderingThisFrame].vertices[2] = topRight;
-            squaresPool[squaresRenderingThisFrame].vertices[3] = bottomRight;
+            squaresPool[squaresRenderingThisFrame].vertex[0].position.x = topLeft.x;
+            squaresPool[squaresRenderingThisFrame].vertex[0].position.y = topLeft.y;
+            squaresPool[squaresRenderingThisFrame].vertex[0].tex_coord.x = 0;
+            squaresPool[squaresRenderingThisFrame].vertex[0].tex_coord.y = 0;
+            squaresPool[squaresRenderingThisFrame].vertex[1].position.x = bottomLeft.x;
+            squaresPool[squaresRenderingThisFrame].vertex[1].position.y = bottomLeft.y;
+            squaresPool[squaresRenderingThisFrame].vertex[1].tex_coord.x = 0;
+            squaresPool[squaresRenderingThisFrame].vertex[1].tex_coord.y = 1;
+            squaresPool[squaresRenderingThisFrame].vertex[2].position.x = topRight.x;
+            squaresPool[squaresRenderingThisFrame].vertex[2].position.y = topRight.y;
+            squaresPool[squaresRenderingThisFrame].vertex[2].tex_coord.x = 1;
+            squaresPool[squaresRenderingThisFrame].vertex[2].tex_coord.y = 0;
+            squaresPool[squaresRenderingThisFrame].vertex[3].position.x = bottomRight.x;
+            squaresPool[squaresRenderingThisFrame].vertex[3].position.y = bottomRight.y;
+            squaresPool[squaresRenderingThisFrame].vertex[3].tex_coord.x = 1;
+            squaresPool[squaresRenderingThisFrame].vertex[3].tex_coord.y = 1;
+            squaresPool[squaresRenderingThisFrame].vertex[4].position.x = topLeft.x;
+            squaresPool[squaresRenderingThisFrame].vertex[4].position.y = topLeft.y;
+            squaresPool[squaresRenderingThisFrame].vertex[4].tex_coord.x = 0;
+            squaresPool[squaresRenderingThisFrame].vertex[4].tex_coord.y = 0;
             squaresPool[squaresRenderingThisFrame].color = squareColor;
         }
         squaresRenderingThisFrame++;
     }
 
     static void renderSquares() {
-        for (int i = 1; i < squaresRenderingThisFrame; i++) {
-            //SDL_SetRenderDrawColor(renderer, squaresPool[i].color.r, squaresPool[i].color.g, squaresPool[i].color.b, squaresPool[i].color.a);
-            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-            SDL_RenderDrawLines(renderer, squaresPool[i].vertices, 5);
-            //SDL_RenderDrawRect(renderer, &squaresPool[i]);
-        }
-        //SDL_Color colors = {};
+
+        SDL_Vertex vert[3];
+        SDL_Color c{ 175, 178, 255, 200 };
+        // center
+        vert[0].position.x = 0;
+        vert[0].position.y = 0;
+        vert[0].tex_coord.x = 0;
+        vert[0].tex_coord.y = 0;
+        vert[0].color = c;
+
+        // left
+        vert[1].position.x = 0;
+        vert[1].position.y = 100;
+        vert[1].tex_coord.x = 0;
+        vert[1].tex_coord.y = 1;
+        vert[1].color = c;
+
+        // right 
+        vert[2].position.x = 200;
+        vert[2].position.y = 100;
+        vert[2].tex_coord.x = 1;
+        vert[2].tex_coord.y = 1;
+        vert[2].color = c;
+
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        //SDL_Surface* surface = SDL_CreateRGBSurface(0, 640, 480, 32, 0, 0, 0, 0);  // Create an empty surface
+        //SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 255, 0, 0));  // Fill the surface with red 
+        //SDL_Texture *demoTexture = SDL_CreateTextureFromSurface(renderer,surface);
+        SDL_RenderGeometry(renderer, NULL, vert, 3, NULL, 0);
+        //for (int i = 1; i < squaresRenderingThisFrame; i++) {
+        //    //SDL_SetRenderDrawColor(renderer, squaresPool[i].color.r, squaresPool[i].color.g, squaresPool[i].color.b, squaresPool[i].color.a);
+        //    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        //    SDL_RenderDrawLines(renderer, squaresPool[i].vertices, 5);
+        //    //SDL_RenderDrawRect(renderer, &squaresPool[i]);
+        //}
+        //SDL_Color colors = {};
+        
         SquareRendererPooling::squaresRenderingThisFrame = 0;
     }
 
