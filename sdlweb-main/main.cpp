@@ -87,18 +87,39 @@ class SquareRendererPooling {
 public:
     SquareRendererPooling() {
 
+        int poolSize = 20;
+        squarePool.reserve(poolSize);
+        for (int i = 0; i < poolSize; i++) {
+            squarePool.push_back(new ObjectData());
+        }
+        avaliablePool = squarePool;
+
+
+    }
+
+    void AddSquare(int xPos, int yPos, int rotation, int width, int height) {
+        if (avaliablePool.size() <= 0) {
+            //Add more squares to the pool
+            ObjectData* newSquare = new ObjectData();
+            squarePool.push_back(newSquare);
+            avaliablePool.push_back(newSquare);
+        }
+        
+        ObjectData* currentSquare = avaliablePool.back();
+        avaliablePool.pop_back();
+        usingPool.push_back(currentSquare);
+
         std::vector<Triangle> allTriangles;
 
-        SDL_Vertex point1; point1.position.x = 100; point1.position.y = 100; point1.tex_coord.x = 0; point1.tex_coord.y = 0; 
-        SDL_Vertex point2; point2.position.x = 100; point2.position.y = 200; point2.tex_coord.x = 0; point2.tex_coord.y = 1; 
-        SDL_Vertex point3; point3.position.x = 300; point3.position.y = 400; point3.tex_coord.x = 1; point3.tex_coord.y = 1; 
+        SDL_Vertex point1; point1.position.x = 100; point1.position.y = 100; point1.tex_coord.x = 0; point1.tex_coord.y = 0;
+        SDL_Vertex point2; point2.position.x = 100; point2.position.y = 200; point2.tex_coord.x = 0; point2.tex_coord.y = 1;
+        SDL_Vertex point3; point3.position.x = 300; point3.position.y = 400; point3.tex_coord.x = 1; point3.tex_coord.y = 1;
         std::vector<SDL_Vertex> leftTrianglePoints;
         leftTrianglePoints.push_back(point1);
         leftTrianglePoints.push_back(point2);
         leftTrianglePoints.push_back(point3);
 
-        printf("capoosh \n");
-        SDL_Color c{ 175, 178, 255, 200};
+        SDL_Color c{ 175, 178, 255, 200 };
         Triangle leftTriangle(leftTrianglePoints, c);
         allTriangles.push_back(leftTriangle);
 
@@ -113,180 +134,38 @@ public:
         Triangle rightTriangle(rightTrianglePoints, c);
         allTriangles.push_back(rightTriangle);
 
-        ObjectData square(allTriangles, 0, 0, 0);
-        squaresPool.push_back(square);
-    }
-
-    void AddSquare(int xPos, int yPos, int rotation, int width, int height) {
+        currentSquare->SetAll(allTriangles, 0, 0, 0, 0, 0, 0);
+        //squarePools.push_back(square);
 
     }
 
-    /*
-    static void addSquare(std::vector<SDL_Vertex> &points, SDL_Color squareColor) {
-        //topleft, bottomleft, bottomright, topright
-        printf("stop point 1 %d %d\n", squaresRenderingThisFrame , squaresPool.size());
-        int squaresPoolSize = squaresPool.size();
-        if (squaresRenderingThisFrame > squaresPoolSize-4) {
-            printf("adding more space \n");
-            ObjectData square;
-            squaresPool.push_back(square);
-           
+    void renderSquares() {    
+
+        for (ObjectData* currentSquare : usingPool) {
+            renderObject(renderer, currentSquare);
         }
-        std::vector<Triangle> triangles;
-
-        printf("stop point 2 \n");
-        SDL_Vertex leftSidePoints[3];
-        for (int i = 0; i < 3; i++) {
-            leftSidePoints[i] = points[i];
-            printf("the point is %d %d \n", leftSidePoints[i].position.y, points[0].position.y);
-            //squaresPool[squaresRenderingThisFrame].triangles.push_back(leftSide);
-        }
-        //Triangle leftSide(leftSidePoints,squareColor);
-        //triangles.push_back(leftSide);
-
-        //printf("stop point 3 %d\n",leftSide.triangle[1].position.y);
-        SDL_Vertex rightSidePoints[3];
-        for (int i = 0; i < 3; i++) {
-            rightSidePoints[i] = points[i];
-            //squaresPool[squaresRenderingThisFrame].triangles.push_back(leftSide);
-        }
-        //Triangle rightSide(rightSidePoints, squareColor);
-        //triangles.push_back(rightSide);
-
-
-        std::vector<Triangle> testTriangles;
-
-        SDL_Vertex point1; point1.position.x = 100; point1.position.y = 100; point1.tex_coord.x = 0; point1.tex_coord.y = 0; point1.color = squareColor;
-        SDL_Vertex point2; point2.position.x = 100; point2.position.y = 200; point2.tex_coord.x = 0; point2.tex_coord.y = 1; point2.color = squareColor;
-        SDL_Vertex point3; point3.position.x = 300; point3.position.y = 200; point3.tex_coord.x = 1; point3.tex_coord.y = 1; point3.color = squareColor;
-
-        SDL_Vertex allPoints[3] = {point1, point2, point3};
-        Triangle demo(allPoints[3], squareColor);
-        testTriangles.push_back(demo);
-
-        printf("stop point 4 \n");
-        squaresPool[0].SetAll(testTriangles, 0, 0, 0);
-
-        printf("stop point 5 \n");
-        squaresRenderingThisFrame++;
-
+        
+        
+        squaresRenderingThisFrame = 0;
+        
     }
-    */
-    //static void addSquare(SDL_Point topLeft, SDL_Point bottomLeft, SDL_Point topRight, SDL_Point bottomRight, SDL_Color squareColor) {
-    //    if (squaresRenderingThisFrame > squaresPool.size()-1) {
-    //        SquareData newSquare;
-    //        newSquare.vertex[0].position.x = topLeft.x;
-    //        newSquare.vertex[0].position.y = topLeft.y;
-    //        newSquare.vertex[0].tex_coord.x = 0;
-    //        newSquare.vertex[0].tex_coord.y = 0;
-    //        newSquare.vertex[1].position.x = bottomLeft.x;
-    //        newSquare.vertex[1].position.y = bottomLeft.y;
-    //        newSquare.vertex[1].tex_coord.x = 0;
-    //        newSquare.vertex[1].tex_coord.y = 1;
-    //        newSquare.vertex[2].position.x = topRight.x;
-    //        newSquare.vertex[2].position.y = topRight.y;
-    //        newSquare.vertex[2].tex_coord.x = 1;
-    //        newSquare.vertex[2].tex_coord.y = 0;
-    //        newSquare.vertex[3].position.x = bottomRight.x;
-    //        newSquare.vertex[3].position.y = bottomRight.y;
-    //        newSquare.vertex[3].tex_coord.x = 1;
-    //        newSquare.vertex[3].tex_coord.y = 1;
-    //        newSquare.vertex[4].position.x = topLeft.x;
-    //        newSquare.vertex[4].position.y = topLeft.y;
-    //        newSquare.vertex[4].tex_coord.x = 0;
-    //        newSquare.vertex[4].tex_coord.y = 0;
-    //        newSquare.color = squareColor;
 
-    //        squaresPool.push_back(newSquare);
-    //    }
-    //    else {
-    //        squaresPool[squaresRenderingThisFrame].vertex[0].position.x = topLeft.x;
-    //        squaresPool[squaresRenderingThisFrame].vertex[0].position.y = topLeft.y;
-    //        squaresPool[squaresRenderingThisFrame].vertex[0].tex_coord.x = 0;
-    //        squaresPool[squaresRenderingThisFrame].vertex[0].tex_coord.y = 0;
-    //        squaresPool[squaresRenderingThisFrame].vertex[1].position.x = bottomLeft.x;
-    //        squaresPool[squaresRenderingThisFrame].vertex[1].position.y = bottomLeft.y;
-    //        squaresPool[squaresRenderingThisFrame].vertex[1].tex_coord.x = 0;
-    //        squaresPool[squaresRenderingThisFrame].vertex[1].tex_coord.y = 1;
-    //        squaresPool[squaresRenderingThisFrame].vertex[2].position.x = topRight.x;
-    //        squaresPool[squaresRenderingThisFrame].vertex[2].position.y = topRight.y;
-    //        squaresPool[squaresRenderingThisFrame].vertex[2].tex_coord.x = 1;
-    //        squaresPool[squaresRenderingThisFrame].vertex[2].tex_coord.y = 0;
-    //        squaresPool[squaresRenderingThisFrame].vertex[3].position.x = bottomRight.x;
-    //        squaresPool[squaresRenderingThisFrame].vertex[3].position.y = bottomRight.y;
-    //        squaresPool[squaresRenderingThisFrame].vertex[3].tex_coord.x = 1;
-    //        squaresPool[squaresRenderingThisFrame].vertex[3].tex_coord.y = 1;
-    //        squaresPool[squaresRenderingThisFrame].vertex[4].position.x = topLeft.x;
-    //        squaresPool[squaresRenderingThisFrame].vertex[4].position.y = topLeft.y;
-    //        squaresPool[squaresRenderingThisFrame].vertex[4].tex_coord.x = 0;
-    //        squaresPool[squaresRenderingThisFrame].vertex[4].tex_coord.y = 0;
-    //        squaresPool[squaresRenderingThisFrame].color = squareColor;
-    //    }
-    //    squaresRenderingThisFrame++;
-    //}
-
-    static void renderSquares() {
-
-        SDL_Vertex vert[3];
-        SDL_Color c{ 175, 178, 255, 200 };
-        // center
-        vert[0].position.x = 100;
-        vert[0].position.y = 100;
-        vert[0].tex_coord.x = 0;
-        vert[0].tex_coord.y = 0;
-        vert[0].color = c;
-
-        // left
-        vert[1].position.x = 100;
-        vert[1].position.y = 200;
-        vert[1].tex_coord.x = 0;
-        vert[1].tex_coord.y = 1;
-        vert[1].color = c;
-
-        // right 
-        vert[2].position.x = 300;
-        vert[2].position.y = 200;
-        vert[2].tex_coord.x = 1;
-        vert[2].tex_coord.y = 1;
-        vert[2].color = c;
-
-        
-        //Triangle testTriangle;
-        //testTriangle.vertex = vert;
-
-        //std::vector<SDL_Vertex> triangle;
-        //triangle.push_back(vert[0]);
-        //triangle.push_back(vert[1]);
-        //triangle.push_back(vert[2]);
-        //std::vector<Triangle> testTriangles;
-        //testTriangles.push_back(Triangle(triangle));
-        //ObjectData testTriangle(testTriangles,0,0,0);
-
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-        //SDL_Surface* surface = SDL_CreateRGBSurface(0, 640, 480, 32, 0, 0, 0, 0);  // Create an empty surface
-        //SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 255, 0, 0));  // Fill the surface with red 
-        //SDL_Texture *demoTexture = SDL_CreateTextureFromSurface(renderer,surface);
-        //SDL_RenderGeometry(renderer, NULL, vert, 3, NULL, 0);
-        renderObject(renderer, (squaresPool[0]));
-        //for (int i = 1; i < squaresRenderingThisFrame; i++) {
-        //    //SDL_SetRenderDrawColor(renderer, squaresPool[i].color.r, squaresPool[i].color.g, squaresPool[i].color.b, squaresPool[i].color.a);
-        //    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-        //    SDL_RenderDrawLines(renderer, squaresPool[i].vertices, 5);
-        //    //SDL_RenderDrawRect(renderer, &squaresPool[i]);
-        //}
-        //SDL_Color colors = {};
-        
-        SquareRendererPooling::squaresRenderingThisFrame = 0;
-        
+    ~SquareRendererPooling() {
+        for (ObjectData* currentSquare:squarePool) {
+            delete currentSquare;
+        }
     }
 
 private:
 
-    static int squaresRenderingThisFrame;
-    static std::vector<ObjectData> squaresPool;
+    int squaresRenderingThisFrame = 0;
+    //static std::vector<ObjectData> squaresPool;
+
+    std::vector<ObjectData*> squarePool;
+    std::vector<ObjectData*> avaliablePool;
+    std::vector<ObjectData*> usingPool;
+    
 };
-int SquareRendererPooling::squaresRenderingThisFrame = 0;
-std::vector<ObjectData> SquareRendererPooling::squaresPool;
 
 
 //Desfine methods and functions
@@ -384,35 +263,17 @@ void mainGame() {
     
     SDL_Rect testRect = { 0,0,100,100 };
     Text fpsText = Text(renderer, "FPS is", 100, 100);
-    //SDL_RenderFillRect(renderer, &testRect);
-    SDL_Color red = { 255,0,0,1 };
 
-    SDL_Vertex blank;
-    std::vector<SDL_Vertex> square(4);
-    for (int i = 0; i < 3; i++) {
-        square.push_back(blank);
-    }
-    square[0].position.x = 0; square[0].position.y = 0;
-    square[1].position.x = 0; square[1].position.y = 100;
-    square[2].position.x = 100; square[2].position.y = 100;
-    square[3].position.x = 100; square[3].position.y = 0;
+    squareRenderer.AddSquare(0, 0, 0, 0, 0);
     
 
     while (true) {
         renderingBasics();
+
         uiManager.getUi(0, 1, fpsText)->SetText(std::to_string(fps));
         uiManager.renderUi();
-        
 
-        
-
-        //squareRenderer.addSquare(square,red);
-
-        SquareRendererPooling::renderSquares();
-
-        //squareRenderer.addSquare({ 0,0 }, { 0,0 }, { 0,0 }, { 0,0 }, red);
-        ////squareRenderer.addSquare({ 0,0 }, { 100,0 }, { 100,100 }, { 0,100 }, red);
-        //squareRenderer.addSquare({ 0,0 }, { 100, 50 }, { 100,150 }, { 0,100 }, red);
+        squareRenderer.renderSquares();
     }
 }
 
