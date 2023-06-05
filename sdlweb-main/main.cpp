@@ -39,6 +39,7 @@ SDL_Color bkg = { 14, 149, 148};
 PlayerData player;
 
 
+
 int scene = 0;
 
 //Define classes
@@ -94,7 +95,7 @@ public:
         }
         avaliablePool = squarePool;
 
-
+        worldObjectRenderer = WorldObjectRenderer(renderer, width, height);
     }
 
     void AddSquare(int xPos, int yPos, int rotation, int width, int height) {
@@ -142,7 +143,7 @@ public:
     void renderSquares() {    
 
         for (ObjectData* currentSquare : usingPool) {
-            renderObject(renderer, currentSquare);
+            worldObjectRenderer.renderObject(renderer,currentSquare, &player);
         }
         
         
@@ -160,7 +161,7 @@ private:
 
     int squaresRenderingThisFrame = 0;
     //static std::vector<ObjectData> squaresPool;
-
+    WorldObjectRenderer worldObjectRenderer;
     std::vector<ObjectData*> squarePool;
     std::vector<ObjectData*> avaliablePool;
     std::vector<ObjectData*> usingPool;
@@ -265,6 +266,7 @@ void mainGame() {
     Text fpsText = Text(renderer, "FPS is", 100, 100);
 
     squareRenderer.AddSquare(0, 0, 0, 0, 0);
+
     
 
     while (true) {

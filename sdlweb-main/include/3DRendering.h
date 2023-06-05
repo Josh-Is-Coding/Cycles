@@ -74,18 +74,37 @@ struct PlayerData {
 };
 
 
-void renderObject(SDL_Renderer* renderer, ObjectData* object /*, PlayerData* player*/) {
-	int triangles = object->GetTriangles().size();
-	for (int i = 0; i < triangles; i++) {
-		printf("ths runns \n");
-		SDL_RenderGeometry(renderer, NULL, (object->GetTriangles()[i].triangle), 3, NULL, 0);
-		//printf("triangles point x:%f  y:%f \n", object->GetTriangles()[0].triangle[i].position.x, object->objectTriangles[0].triangle[i].position.y);
-		
-	}
-	
+class WorldObjectRenderer {
+public:
+	WorldObjectRenderer() = default;
 
-	//SDL_RenderGeometry(renderer, NULL, vert, 3, NULL, 0);
-}
+	WorldObjectRenderer(SDL_Renderer* renderer, int screenWidth, int screenHight) {
+		this->renderer = renderer;
+		this->screenHight = screenHight;
+		this->screenWidth = screenWidth;
+	}
+
+	void renderObject(SDL_Renderer* renderer, ObjectData* object, PlayerData* player) {
+		int triangles = object->GetTriangles().size();
+		for (int i = 0; i < triangles; i++) {
+			printf("ths runns \n");
+			SDL_RenderGeometry(renderer, NULL, (object->GetTriangles()[i].triangle), 3, NULL, 0);
+			//printf("triangles point x:%f  y:%f \n", object->GetTriangles()[0].triangle[i].position.x, object->objectTriangles[0].triangle[i].position.y);
+
+		}
+
+
+		//SDL_RenderGeometry(renderer, NULL, vert, 3, NULL, 0);
+	}
+
+
+private:
+	SDL_Renderer* renderer;
+	int screenWidth;
+	int screenHight;
+};
+
+
 
 
 
