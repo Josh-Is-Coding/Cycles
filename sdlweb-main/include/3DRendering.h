@@ -53,6 +53,34 @@ public:
 		this->width = width;
 	}
 
+	void SetFlatSquarePosition(int xPos, int yPos, int width, int height) {
+		int halfWidth = width / 2;
+		int halfHeight = height / 2;
+		objectTriangles[0].triangle[0].position.x = xPos - halfWidth; objectTriangles[0].triangle[0].position.y = yPos - halfHeight;
+		objectTriangles[0].triangle[1].position.x = xPos - halfWidth; objectTriangles[0].triangle[1].position.y = yPos + halfHeight;
+		objectTriangles[0].triangle[2].position.x = xPos + halfWidth; objectTriangles[0].triangle[2].position.y = yPos + halfHeight;
+
+		objectTriangles[1].triangle[0].position.x = xPos - halfWidth; objectTriangles[1].triangle[0].position.y = yPos - halfHeight;
+		objectTriangles[1].triangle[1].position.x = xPos + halfWidth; objectTriangles[1].triangle[1].position.y = yPos - halfHeight;
+		objectTriangles[1].triangle[2].position.x = xPos + halfWidth; objectTriangles[1].triangle[2].position.y = yPos +halfHeight;
+	}
+
+	void SetYpos() {
+
+	}
+
+	int GetXPos() {
+		return xPos;
+	}
+
+	int GetYPos() {
+		return yPos;
+	}
+
+	int GetRotation() {
+		return yPos;
+	}
+
 	std::vector<Triangle> GetTriangles() {
 		return objectTriangles;
 	}
@@ -86,6 +114,10 @@ public:
 
 	void renderObject(SDL_Renderer* renderer, ObjectData* object, PlayerData* player) {
 		int triangles = object->GetTriangles().size();
+		int objectX = object->GetXPos();
+		int objectY = object->GetYPos();
+		int objectRotation = object->GetRotation();
+		object->SetFlatSquarePosition(100, 100, 200, 100);
 		for (int i = 0; i < triangles; i++) {
 			printf("ths runns \n");
 			SDL_RenderGeometry(renderer, NULL, (object->GetTriangles()[i].triangle), 3, NULL, 0);

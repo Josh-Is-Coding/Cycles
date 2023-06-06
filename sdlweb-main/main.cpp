@@ -98,7 +98,7 @@ public:
         worldObjectRenderer = WorldObjectRenderer(renderer, width, height);
     }
 
-    void AddSquare(int xPos, int yPos, int rotation, int width, int height) {
+    void AddSquare(int xPos, int yPos, int zPos, int rotation, int width, int height) {
         if (avaliablePool.size() <= 0) {
             //Add more squares to the pool
             ObjectData* newSquare = new ObjectData();
@@ -112,9 +112,9 @@ public:
 
         std::vector<Triangle> allTriangles;
 
-        SDL_Vertex point1; point1.position.x = 100; point1.position.y = 100; point1.tex_coord.x = 0; point1.tex_coord.y = 0;
-        SDL_Vertex point2; point2.position.x = 100; point2.position.y = 200; point2.tex_coord.x = 0; point2.tex_coord.y = 1;
-        SDL_Vertex point3; point3.position.x = 300; point3.position.y = 400; point3.tex_coord.x = 1; point3.tex_coord.y = 1;
+        SDL_Vertex point1; point1.position.x = xPos; point1.position.y = yPos-height; point1.tex_coord.x = 0; point1.tex_coord.y = 0;
+        SDL_Vertex point2; point2.position.x = xPos; point2.position.y = yPos; point2.tex_coord.x = 0; point2.tex_coord.y = 1;
+        SDL_Vertex point3; point3.position.x = xPos+width; point3.position.y = yPos; point3.tex_coord.x = 1; point3.tex_coord.y = 1;
         std::vector<SDL_Vertex> leftTrianglePoints;
         leftTrianglePoints.push_back(point1);
         leftTrianglePoints.push_back(point2);
@@ -124,9 +124,9 @@ public:
         Triangle leftTriangle(leftTrianglePoints, c);
         allTriangles.push_back(leftTriangle);
 
-        SDL_Vertex point1a; point1a.position.x = 100; point1a.position.y = 100; point1a.tex_coord.x = 0; point1a.tex_coord.y = 0;
-        SDL_Vertex point2a; point2a.position.x = 300; point2a.position.y = 300; point2a.tex_coord.x = 1; point2a.tex_coord.y = 0;
-        SDL_Vertex point3a; point3a.position.x = 300; point3a.position.y = 400; point3a.tex_coord.x = 1; point3a.tex_coord.y = 1;
+        SDL_Vertex point1a; point1a.position.x = xPos; point1a.position.y = yPos-height; point1a.tex_coord.x = 0; point1a.tex_coord.y = 0;
+        SDL_Vertex point2a; point2a.position.x = xPos+width; point2a.position.y = yPos - height; point2a.tex_coord.x = 1; point2a.tex_coord.y = 0;
+        SDL_Vertex point3a; point3a.position.x = xPos+width; point3a.position.y = yPos; point3a.tex_coord.x = 1; point3a.tex_coord.y = 1;
         std::vector<SDL_Vertex> rightTrianglePoints;
         rightTrianglePoints.push_back(point1a);
         rightTrianglePoints.push_back(point2a);
@@ -135,7 +135,7 @@ public:
         Triangle rightTriangle(rightTrianglePoints, c);
         allTriangles.push_back(rightTriangle);
 
-        currentSquare->SetAll(allTriangles, 0, 0, 0, 0, 0, 0);
+        currentSquare->SetAll(allTriangles, xPos, zPos, yPos, rotation, width, height);
         //squarePools.push_back(square);
 
     }
@@ -265,7 +265,7 @@ void mainGame() {
     SDL_Rect testRect = { 0,0,100,100 };
     Text fpsText = Text(renderer, "FPS is", 100, 100);
 
-    squareRenderer.AddSquare(0, 0, 0, 0, 0);
+    squareRenderer.AddSquare(100, 500, 100, 0, 500, 100);
 
     
 
