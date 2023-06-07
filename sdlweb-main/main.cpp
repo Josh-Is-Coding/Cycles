@@ -14,6 +14,7 @@
 #include <emscripten.h>
 #include <emscripten/html5.h>
 #include <UiManager.h>
+#include <chrono>
 #include <3DRendering.h>
 
 
@@ -95,7 +96,8 @@ public:
         }
         avaliablePool = squarePool;
 
-        worldObjectRenderer = WorldObjectRenderer(renderer, width, height);
+        int fov = 90;
+        worldObjectRenderer = WorldObjectRenderer(renderer, width, height, fov);
     }
 
     void AddSquare(int xPos, int yPos, int zPos, int rotation, int width, int height) {
@@ -120,7 +122,7 @@ public:
         leftTrianglePoints.push_back(point2);
         leftTrianglePoints.push_back(point3);
 
-        SDL_Color c{ 175, 178, 255, 200 };
+        SDL_Color c{ 175, 178, 255, 255 };
         Triangle leftTriangle(leftTrianglePoints, c);
         allTriangles.push_back(leftTriangle);
 
@@ -142,10 +144,10 @@ public:
 
     void renderSquares() {    
 
-        for (ObjectData* currentSquare : usingPool) {
-            worldObjectRenderer.renderObject(renderer,currentSquare, &player);
-        }
-        
+        //for (ObjectData* currentSquare : usingPool) {
+        //    worldObjectRenderer.renderObject(renderer,currentSquare, &player);
+        //}
+        worldObjectRenderer.renderObject(renderer, usingPool, &player);
         
         squaresRenderingThisFrame = 0;
         
@@ -261,12 +263,11 @@ UiManager uiManager;
 void mainGame() {
     renderingBasics();
     SquareRendererPooling squareRenderer;
-    
+   
     SDL_Rect testRect = { 0,0,100,100 };
     Text fpsText = Text(renderer, "FPS is", 100, 100);
 
-    squareRenderer.AddSquare(100, 500, 100, 0, 500, 100);
-
+    squareRenderer.AddSquare(250, 0, 800, 0, 500, 200);
     
 
     while (true) {
@@ -336,7 +337,25 @@ void mainMenue() {
     }
 }
 
+EM_BOOL key_callback(int eventType, const EmscriptenKeyboardEvent* e, void* userData) {
+    printf("the key name is %s and the code is %lu \n", e->key, e->which);
+    if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "a") || e->which == 97)) {
+        player.xPos += 10 ;
+    }
+    if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "d") || e->which == 100)) {
+        player.xPos -= 10 ;
+    }
 
+    if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "w") || e->which == 119)) {
+        player.zPos -= 10;
+    }
+    if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "s") || e->which == 115)) {
+        player.zPos += 10;
+    }
+
+    printf("The player z position is: %d", player.zPos);
+    return 0;
+}
 
 EM_BOOL mouse_callback(int eventType, const EmscriptenMouseEvent* e, void* userData) {
     if (eventType == EMSCRIPTEN_EVENT_CLICK) {
@@ -368,6 +387,7 @@ int main() {
 
      if (isMobile == 0){
          emscripten_set_click_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, 0, 1, mouse_callback);
+         emscripten_set_keypress_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, 0, 1, key_callback);
      }
      else {
          emscripten_set_touchstart_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, 0, 1, touch_callback);

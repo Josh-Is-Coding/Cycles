@@ -1,6 +1,8 @@
 #pragma once
 #include <SDL2/SDL.h>
+#include <iostream>
 #include<vector>
+#include<cmath>
 
 struct Triangle {
 	Triangle(std::vector<SDL_Vertex> points, SDL_Color color) {
@@ -65,8 +67,12 @@ public:
 		objectTriangles[1].triangle[2].position.x = xPos + halfWidth; objectTriangles[1].triangle[2].position.y = yPos +halfHeight;
 	}
 
-	void SetYpos() {
+	int GetWidth() {
+		return width;
+	}
 
+	int GetHeight() {
+		return height;
 	}
 
 	int GetXPos() {
@@ -75,6 +81,10 @@ public:
 
 	int GetYPos() {
 		return yPos;
+	}
+
+	int GetZPos() {
+		return zPos;
 	}
 
 	int GetRotation() {
@@ -96,8 +106,9 @@ private:
 };
 
 struct PlayerData {
-	int xPos;
-	int yPos;
+	int xPos = 250;
+	int zPos = 500;
+	int yPos = 0;
 	int rotation = 0; //In degrees, clockwise around the y axis
 };
 
@@ -106,24 +117,68 @@ class WorldObjectRenderer {
 public:
 	WorldObjectRenderer() = default;
 
-	WorldObjectRenderer(SDL_Renderer* renderer, int screenWidth, int screenHight) {
+	WorldObjectRenderer(SDL_Renderer* renderer, int screenWidth, int screenHight, int fov) {
 		this->renderer = renderer;
 		this->screenHight = screenHight;
+		this->screenMidHeight = screenHight / 2;
 		this->screenWidth = screenWidth;
+		this->screenMidWidth = screenWidth / 2;
+		this->fov = ((double)fov)/2;
+		this->tanFov = (int)(tan(this->fov));
+
+		worldToScreenX = 500 / screenWidth;
+		scalingFactor = 0.5f;
 	}
 
-	void renderObject(SDL_Renderer* renderer, ObjectData* object, PlayerData* player) {
-		int triangles = object->GetTriangles().size();
-		int objectX = object->GetXPos();
-		int objectY = object->GetYPos();
-		int objectRotation = object->GetRotation();
-		object->SetFlatSquarePosition(100, 100, 200, 100);
-		for (int i = 0; i < triangles; i++) {
-			printf("ths runns \n");
-			SDL_RenderGeometry(renderer, NULL, (object->GetTriangles()[i].triangle), 3, NULL, 0);
-			//printf("triangles point x:%f  y:%f \n", object->GetTriangles()[0].triangle[i].position.x, object->objectTriangles[0].triangle[i].position.y);
+	void renderObject(SDL_Renderer* renderer, std::vector<ObjectData*> objects, PlayerData* player) {
+		
+		int playerDirection = player->rotation % 180;
+		for (ObjectData* object : objects) {
+		//	ObjectData* object = objects[0];
+			int triangles = object->GetTriangles().size();
 
+			int objectRotation = object->GetRotation();
+
+			if (player->rotation % 90 != 0) {
+				//do rotated things
+			}
+
+			
+			if ((objectRotation&180) == playerDirection) {
+				//Facing the square straight on
+
+				int objectComparison;
+				int playerComparison;
+				int maxLimit;
+
+				int distance;
+				if (playerDirection == 0) {
+					objectComparison = object->GetXPos();
+					playerComparison = player->xPos;
+					distance = abs(object->GetZPos() - player->zPos);
+				}
+				else {
+					objectComparison = object->GetZPos();
+					playerComparison = player->zPos;
+					distance = abs(object->GetXPos() - player->xPos);
+				}
+
+				int renderObjectXPos = (int)(screenMidWidth + (objectComparison - playerComparison));
+				object->SetFlatSquarePosition(renderObjectXPos, 400, object->GetWidth() * (1.0f - scalingFactor * (distance-1)*0.001f), object->GetHeight() * (1.0f - scalingFactor * (distance - 1) * 0.001f));
+			}
+			else {
+				// square is to the side
+			}
+
+			//object->SetFlatSquarePosition(200, 100, 200, 100);
+			for (int i = 0; i < triangles; i++) {
+				printf("ths runns \n");
+				SDL_RenderGeometry(renderer, NULL, (object->GetTriangles()[i].triangle), 3, NULL, 0);
+				//printf("triangles point x:%f  y:%f \n", object->GetTriangles()[0].triangle[i].position.x, object->objectTriangles[0].triangle[i].position.y);
+
+			}
 		}
+
 
 
 		//SDL_RenderGeometry(renderer, NULL, vert, 3, NULL, 0);
@@ -133,7 +188,15 @@ public:
 private:
 	SDL_Renderer* renderer;
 	int screenWidth;
+	int screenMidWidth;
 	int screenHight;
+	int screenMidHeight;
+	double fov;
+	float worldToScreenX;
+	float worldToScreenY;
+	int tanFov;
+
+	float scalingFactor;
 };
 
 
