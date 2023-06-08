@@ -38,7 +38,7 @@ SDL_Event event;
 bool running;
 SDL_Color bkg = { 14, 149, 148};
 PlayerData player;
-
+CameraData camera;
 
 
 int scene = 0;
@@ -147,7 +147,7 @@ public:
         //for (ObjectData* currentSquare : usingPool) {
         //    worldObjectRenderer.renderObject(renderer,currentSquare, &player);
         //}
-        worldObjectRenderer.renderObject(renderer, usingPool, &player);
+        worldObjectRenderer.renderObject(renderer, usingPool, &player, &camera);
         
         squaresRenderingThisFrame = 0;
         
@@ -268,7 +268,9 @@ void mainGame() {
     Text fpsText = Text(renderer, "FPS is", 100, 100);
 
     squareRenderer.AddSquare(250, 0, 800, 0, 500, 200);
-    
+    camera.xPos = player.xPos + camera.xOffset;
+    camera.yPos = player.yPos + camera.yOffset;
+    camera.zPos = player.zPos + camera.zOffset;
 
     while (true) {
         renderingBasics();
@@ -341,6 +343,7 @@ EM_BOOL key_callback(int eventType, const EmscriptenKeyboardEvent* e, void* user
     printf("the key name is %s and the code is %lu \n", e->key, e->which);
     if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "a") || e->which == 97)) {
         player.xPos += 10 ;
+        
     }
     if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "d") || e->which == 100)) {
         player.xPos -= 10 ;
@@ -352,6 +355,10 @@ EM_BOOL key_callback(int eventType, const EmscriptenKeyboardEvent* e, void* user
     if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "s") || e->which == 115)) {
         player.zPos += 10;
     }
+
+    camera.xPos = player.xPos + camera.xOffset;
+    camera.yPos = player.yPos + camera.yOffset;
+    camera.zPos = player.zPos + camera.zOffset;
 
     printf("The player z position is: %d", player.zPos);
     return 0;

@@ -67,6 +67,30 @@ public:
 		objectTriangles[1].triangle[2].position.x = xPos + halfWidth; objectTriangles[1].triangle[2].position.y = yPos +halfHeight;
 	}
 
+	void SetLeftEdge(int xPos, int yPos, int width, int height) {
+		objectTriangles[0].triangle[0].position.y = yPos - height/2;
+		objectTriangles[0].triangle[1].position.y = yPos + height / 2;
+		objectTriangles[1].triangle[0].position.y = yPos - height / 2;
+
+	}
+
+	void SetRightEdge(int xPos, int yPos, int width, int height) {
+		objectTriangles[0].triangle[2].position.y = yPos + height / 2;
+		objectTriangles[1].triangle[2].position.y = yPos - height / 2;
+		objectTriangles[1].triangle[1].position.y = yPos + height / 2;
+	}
+	void SetTopEdge(int xPos, int yPos, int width, int height) {
+		objectTriangles[0].triangle[0].position.x = xPos - width / 2; 
+		objectTriangles[1].triangle[0].position.x = xPos - width / 2; 
+		objectTriangles[1].triangle[2].position.x = xPos + width / 2; 
+
+	}
+	void SetBottomtEdge(int xPos, int yPos, int width, int height) {
+		objectTriangles[0].triangle[1].position.x = xPos - width / 2;
+		objectTriangles[0].triangle[2].position.x = xPos + width / 2;
+		objectTriangles[1].triangle[1].position.x = xPos + width / 2;
+	}
+
 	int GetWidth() {
 		return width;
 	}
@@ -112,6 +136,16 @@ struct PlayerData {
 	int rotation = 0; //In degrees, clockwise around the y axis
 };
 
+struct CameraData {
+	int xOffset = 0;
+	int yOffset = 50;
+	int zOffset = -200;
+	int xPos = 0;
+	int zPos = 0;
+	int yPos = 0;
+	int cameraRotation = 75;//Rotation angle from z or x axis depending on y rotation
+};
+
 
 class WorldObjectRenderer {
 public:
@@ -130,7 +164,7 @@ public:
 		scalingFactor = 0.5f;
 	}
 
-	void renderObject(SDL_Renderer* renderer, std::vector<ObjectData*> objects, PlayerData* player) {
+	void renderObject(SDL_Renderer* renderer, std::vector<ObjectData*> objects, PlayerData* player, CameraData* camera) {
 		
 		int playerDirection = player->rotation % 180;
 		for (ObjectData* object : objects) {
@@ -143,28 +177,32 @@ public:
 				//do rotated things
 			}
 
-			
+			int distance = 0;
 			if ((objectRotation&180) == playerDirection) {
 				//Facing the square straight on
 
 				int objectComparison;
-				int playerComparison;
+				int cameraComparison;
 				int maxLimit;
 
-				int distance;
+				
 				if (playerDirection == 0) {
 					objectComparison = object->GetXPos();
-					playerComparison = player->xPos;
-					distance = abs(object->GetZPos() - player->zPos);
+					cameraComparison = camera->xPos;
+					distance = object->GetZPos() - camera->zPos;
 				}
 				else {
 					objectComparison = object->GetZPos();
-					playerComparison = player->zPos;
-					distance = abs(object->GetXPos() - player->xPos);
+					cameraComparison = camera->zPos;
+					distance = object->GetXPos() - camera->xPos;
 				}
 
-				int renderObjectXPos = (int)(screenMidWidth + (objectComparison - playerComparison));
+				int renderObjectXPos = (int)(screenMidWidth + (objectComparison - cameraComparison));
 				object->SetFlatSquarePosition(renderObjectXPos, 400, object->GetWidth() * (1.0f - scalingFactor * (distance-1)*0.001f), object->GetHeight() * (1.0f - scalingFactor * (distance - 1) * 0.001f));
+				object->SetLeftEdge(100, 200, 0, 200);
+				object->SetTopEdge(300, 200 , 600, 0);
+				object->SetRightEdge(500, 200, 0, 400);
+				object->SetBottomtEdge(300, 300,500,0);
 			}
 			else {
 				// square is to the side
@@ -172,8 +210,11 @@ public:
 
 			//object->SetFlatSquarePosition(200, 100, 200, 100);
 			for (int i = 0; i < triangles; i++) {
-				printf("ths runns \n");
-				SDL_RenderGeometry(renderer, NULL, (object->GetTriangles()[i].triangle), 3, NULL, 0);
+				printf("distance is:%d \n", distance);
+				if (distance >= 0) {
+					SDL_RenderGeometry(renderer, NULL, (object->GetTriangles()[i].triangle), 3, NULL, 0);
+				}
+				
 				//printf("triangles point x:%f  y:%f \n", object->GetTriangles()[0].triangle[i].position.x, object->objectTriangles[0].triangle[i].position.y);
 
 			}
