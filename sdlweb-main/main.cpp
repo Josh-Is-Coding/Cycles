@@ -96,8 +96,7 @@ public:
         }
         avaliablePool = squarePool;
 
-        int fov = 90;
-        worldObjectRenderer = WorldObjectRenderer(renderer, width, height, fov);
+        worldObjectRenderer = WorldObjectRenderer(renderer, width, height);
     }
 
     void AddSquare(int xPos, int yPos, int zPos, int rotation, int width, int height) {
@@ -192,7 +191,7 @@ void begin_render() {
       frameCount++;
       timerFPS = SDL_GetTicks()-lastFrame;
       if(timerFPS<(1000/setFPS)) {
-        SDL_Delay((1000/setFPS)-timerFPS);
+        //SDL_Delay((1000/setFPS)-timerFPS);
           //SDL_Delay(8);
   }
 }
@@ -259,10 +258,10 @@ void renderingBasics() {
 
 UiManager uiManager;
 
-
+SquareRendererPooling squareRenderer;
 void mainGame() {
     renderingBasics();
-    SquareRendererPooling squareRenderer;
+    
    
     SDL_Rect testRect = { 0,0,100,100 };
     Text fpsText = Text(renderer, "FPS is", 100, 100);
@@ -285,7 +284,7 @@ void mainGame() {
 void startGame() {
     printf("starting the game \n");
     emscripten_cancel_main_loop();
-    SDL_Delay(10);
+    SDL_Delay(1000);
     //uiManager.setGroupActive(0, false);
     emscripten_set_main_loop(mainGame, 0, 1);
 }
@@ -339,29 +338,30 @@ void mainMenue() {
     }
 }
 
+int numTriangles = 1;
 EM_BOOL key_callback(int eventType, const EmscriptenKeyboardEvent* e, void* userData) {
-    printf("the key name is %s and the code is %lu \n", e->key, e->which);
     if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "a") || e->which == 97)) {
         player.xPos += 10 ;
-        
+        squareRenderer.AddSquare(250, 0, 800, 0, 500, 200);
+        numTriangles += 1;
+        printf("number of triangles is :%d \n", numTriangles);
     }
     if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "d") || e->which == 100)) {
         player.xPos -= 10 ;
     }
 
     if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "w") || e->which == 119)) {
-        player.zPos -= 10;
+        player.zPos += 1;
     }
     if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "s") || e->which == 115)) {
-        player.zPos += 10;
+        player.zPos -= 1;
     }
 
     camera.xPos = player.xPos + camera.xOffset;
     camera.yPos = player.yPos + camera.yOffset;
     camera.zPos = player.zPos + camera.zOffset;
 
-    printf("The player z position is: %d", player.zPos);
-    return 0;
+     return 0;
 }
 
 EM_BOOL mouse_callback(int eventType, const EmscriptenMouseEvent* e, void* userData) {
