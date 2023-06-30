@@ -141,6 +141,10 @@ public:
 
     }
 
+    ObjectData* GetSquare(int squareId) {
+        return usingPool[squareId];
+    }
+
     void renderSquares() {    
 
         //for (ObjectData* currentSquare : usingPool) {
@@ -266,16 +270,18 @@ void mainGame() {
     SDL_Rect testRect = { 0,0,100,100 };
     Text fpsText = Text(renderer, "FPS is", 100, 100);
 
-    squareRenderer.AddSquare(250, 0, 800, 0, 500, 200);
-    camera.xPos = player.xPos + camera.xOffset;
-    camera.yPos = player.yPos + camera.yOffset;
-    camera.zPos = player.zPos + camera.zOffset;
+    squareRenderer.AddSquare(300, 0, 500, 0, 50, 200);
+    squareRenderer.GetSquare(0)->Set2DPos(700, 500);
+    squareRenderer.AddSquare(500, 0, 550, 0, 100, 100);
+    //squareRenderer.AddSquare(1500, 0, 550, 0, 100, 100);
+    camera.RePosition(player.xPos, player.zPos, player.yPos);
+    
 
     while (true) {
         renderingBasics();
-
         uiManager.getUi(0, 1, fpsText)->SetText(std::to_string(fps));
         uiManager.renderUi();
+        
 
         squareRenderer.renderSquares();
     }
@@ -285,7 +291,7 @@ void startGame() {
     printf("starting the game \n");
     emscripten_cancel_main_loop();
     SDL_Delay(1000);
-    //uiManager.setGroupActive(0, false);
+    uiManager.setGroupActive(0, false);
     emscripten_set_main_loop(mainGame, 0, 1);
 }
 
@@ -341,25 +347,31 @@ void mainMenue() {
 int numTriangles = 1;
 EM_BOOL key_callback(int eventType, const EmscriptenKeyboardEvent* e, void* userData) {
     if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "a") || e->which == 97)) {
-        player.xPos += 10 ;
-        squareRenderer.AddSquare(250, 0, 800, 0, 500, 200);
-        numTriangles += 1;
-        printf("number of triangles is :%d \n", numTriangles);
-    }
-    if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "d") || e->which == 100)) {
         player.xPos -= 10 ;
+        //player.zPos -= 10;
+     }
+    if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "d") || e->which == 100)) {
+        player.xPos += 10;
     }
 
     if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "w") || e->which == 119)) {
-        player.zPos += 1;
+        //player.zPos += 10;
+        player.moveForward(10);
     }
     if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "s") || e->which == 115)) {
-        player.zPos -= 1;
+        player.moveForward(-10);
     }
 
-    camera.xPos = player.xPos + camera.xOffset;
-    camera.yPos = player.yPos + camera.yOffset;
-    camera.zPos = player.zPos + camera.zOffset;
+    if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "r"))) {
+        player.rotate(10);
+    }
+
+    camera.cameraRotation = player.rotation;
+    camera.RePosition(player.xPos, player.zPos, player.yPos);
+    //camera.xPos = player.xPos + camera.xOffset;
+    //camera.yPos = player.yPos + camera.yOffset;
+    //camera.zPos = player.zPos + camera.zOffset;
+    
 
      return 0;
 }
