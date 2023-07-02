@@ -5,21 +5,39 @@
 #include<cmath>
 
 struct Triangle {
-	Triangle(std::vector<SDL_Vertex> points, SDL_Color color) {
+	Triangle(std::vector<SDL_Vertex> points, SDL_Color color, bool leftTriangle) {
 		for (int i = 0; i < 3; i++) {
 			this->triangle[i] = points[i];
 			this->triangle[i].color = color;
+
 			printf("the point x is: %f \n",triangle[i].position.x);
 		}
 		this->triangle[0].tex_coord.x = 0;
 		this->triangle[0].tex_coord.y = 0;
-		this->triangle[1].tex_coord.x = 0;
-		this->triangle[1].tex_coord.y = 1;
+		if (leftTriangle) {
+			this->triangle[1].tex_coord.x = 0;
+			this->triangle[1].tex_coord.y = 1;
+		}
+		else {
+			this->triangle[1].tex_coord.x = 1;
+			this->triangle[1].tex_coord.y = 0;
+		}
+
 		this->triangle[2].tex_coord.x = 1;
 		this->triangle[2].tex_coord.y = 1;
+		triangleTexture = NULL;
+	}
+
+	void AddTexture(SDL_Renderer* renderer, const char* textureName) {
+		triangleTexture = IMG_LoadTexture(renderer,textureName);
+	}
+
+	SDL_Texture* GetTexture() {
+		return triangleTexture;
 	}
 
 	SDL_Vertex triangle[3];
+	SDL_Texture* triangleTexture;
 };
 
 class ObjectData {
@@ -45,10 +63,9 @@ public:
 		this->zPos = zPos;
 	}
 
-	void SetAll(const std::vector<Triangle>& objectTriangles, int xPos, int zPos, int yPos, int rotation, int width, int height) {
+	void SetAll(const std::vector<Triangle>& objectTriangles, int xPos, int zPos, int yPos, int rotation, int width, int height, int depth) {
 
 		this->objectTriangles = objectTriangles;
-
 
 		this->xPos = xPos;
 		this->zPos = zPos;
@@ -56,6 +73,7 @@ public:
 		this->rotation = rotation;
 		this->height = height;
 		this->width = width;
+		this->depth = depth;
 	}
 
 	void SetFlatSquarePosition(int xPos, int yPos, int width, int height, double rotationAmount) {
@@ -161,6 +179,7 @@ private:
 	int rotation = 0; //In degrees, clockwise around the y axis
 	int width = 0;
 	int height = 0;
+	int depth = 50;
 };
 
 struct PlayerData {
@@ -175,7 +194,7 @@ struct PlayerData {
 			rotation -= 360;
 		}
 		if (rotation < 0) {
-			rotation = 360 - rotation;
+			rotation = 360 - abs(rotation);
 		}
 	}
 
@@ -185,23 +204,24 @@ struct PlayerData {
 
 		int angle = rotation % 90;
 
-		if (rotation >= 90 && rotation <= 180) {
+		if (rotation >= 90 && rotation < 180) {
 			zSignController = -1;
-			angle = 90 - angle;
-
-		}
-		else if (rotation > 180 && rotation < 270) {
-			xSignController = -1;
-			zSignController = -1;
-		}
-		else if (rotation >= 270) {
 			xSignController = -1;
 			angle = 90 - angle;
+		}
+		else if (rotation >= 180 && rotation < 270) {
+			zSignController = -1;
+		}
+		else if (rotation >= 270 && rotation < 360) {
+			angle = 90 - angle;
+		}
+		else {
+			xSignController = -1;
 		}
 
 		double radianAngle = angle * M_PI / 180;
-		xPos -= sin(angle) * distance;
-		zPos -= cos(angle) * distance;
+		xPos += sin(radianAngle) * distance * xSignController;
+		zPos += cos(radianAngle) * distance *zSignController;
 	}
 };
 
@@ -269,10 +289,6 @@ public:
 			int xQuadrentModifier = 1; //Changes the sign of the x co-ordinate depending on what quadrent the object is in relative to the camera view
 			int zQuadrentModifier = 1; //Same as last line but for y co-ordinate
 
-			double testx = -24;
-			double testy = 5;
-			double angle = atan2(testx, testy);
-			angle = angle* 180 / pi;
 			//printf("The angle is: %f \n", angle);
 
 			int objectx = object->GetXPos();
@@ -317,24 +333,8 @@ public:
 				}
 			}
 
-			
-			if (diffrenceInAngleToXAxis > 180 || diffrenceInAngleToXAxis < -180) {
-				//diffrenceInAngleToXAxis = 179;
-			}
-			printf("The angle is: %f \n", diffrenceInAngleToXAxis);
-			//printf("Fucking blaanks \n");
-			printf("The player rotation is: %d \n", player->rotation);
-			
 			diffrenceInAngleToXAxis = std::fmod(diffrenceInAngleToXAxis, 90);
 			
-			//printf("The current camera rotation is: %d \n", camera->cameraRotation);
-
-			if (diffrenceInAngleToXAxis < 0.1) {
-				//diffrenceInAngleToXAxis = 0.1;
-			}
-
-			
-
 			double objectDistance = DistanceCalculator(camera->xPos, camera->zPos, objectx, objectz);
 			
 			if (rightSideOfCamera == true) {
@@ -342,21 +342,14 @@ public:
 				distanceHorizontal = cos(diffrenceInAngleToXAxis * pi / 180) * objectDistance;
 			}
 			else {
-				printf("Left side of screen \n");
 				distanceVertical = cos(diffrenceInAngleToXAxis * pi / 180) * objectDistance; //adj = opp(angle) * hyo
 				distanceHorizontal = sin(diffrenceInAngleToXAxis * pi / 180) * objectDistance;
 			}
-
-
-
-			//printf("The relative y distance is: %f \n", distanceVertical);
 
 			object->SetFlatSquarePosition(screenMidWidth+ distanceHorizontal * xQuadrentModifier, screenMidHeight + -distanceVertical * zQuadrentModifier,
 											object->GetWidth(), object->GetHeight(), camera->cameraRotation);
 
 			if ((objectRotation%180) == playerDirection) {
-				//Facing the square straight on
-
 				int objectComparison;
 				int objectComparisonAlt;
 				int cameraComparison;
@@ -384,15 +377,12 @@ public:
 			}
 
 			int triangles = object->GetTriangles().size();
-			//object->SetFlatSquarePosition(200, 100, 200, 100);
+
 			for (int i = 0; i < triangles; i++) {
-				SDL_RenderGeometry(renderer, NULL, (object->GetTriangles()[i].triangle), 3, NULL, 0);				
+
+				SDL_RenderGeometry(renderer, object->GetTriangles()[i].GetTexture(), (object->GetTriangles()[i].triangle), 3, NULL, 0);		
 			}
 		}
-
-
-
-		//SDL_RenderGeometry(renderer, NULL, vert, 3, NULL, 0);
 	}
 
 

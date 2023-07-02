@@ -28,8 +28,9 @@ SDL_Renderer* renderer;
 SDL_Window* window;
 SDL_Texture* screen;
 SDL_Rect screensize;
-int frameCount, timerFPS, lastFrame, fps, lastTime;
-int setFPS = 120;
+int frameCount, timerFPS, lastFrame,currentFrame, fps;
+int lastTime = 0;
+int setFPS = 60;
 SDL_Point mouse;
 int mousex, mousey = 0;
 const Uint8* keystates;
@@ -99,7 +100,8 @@ public:
         worldObjectRenderer = WorldObjectRenderer(renderer, width, height);
     }
 
-    void AddSquare(int xPos, int yPos, int zPos, int rotation, int width, int height) {
+    void AddSquare(int xPos, int yPos, int zPos, int rotation, int width, int height, int depth, const char* textureFileName) {
+
         if (avaliablePool.size() <= 0) {
             //Add more squares to the pool
             ObjectData* newSquare = new ObjectData();
@@ -113,30 +115,35 @@ public:
 
         std::vector<Triangle> allTriangles;
 
-        SDL_Vertex point1; point1.position.x = xPos; point1.position.y = yPos-height; point1.tex_coord.x = 0; point1.tex_coord.y = 0;
-        SDL_Vertex point2; point2.position.x = xPos; point2.position.y = yPos; point2.tex_coord.x = 0; point2.tex_coord.y = 1;
-        SDL_Vertex point3; point3.position.x = xPos+width; point3.position.y = yPos; point3.tex_coord.x = 1; point3.tex_coord.y = 1;
+        SDL_Vertex point1; point1.position.x = xPos; point1.position.y = yPos-height; 
+        SDL_Vertex point2; point2.position.x = xPos; point2.position.y = yPos; 
+        SDL_Vertex point3; point3.position.x = xPos+width; point3.position.y = yPos; 
         std::vector<SDL_Vertex> leftTrianglePoints;
         leftTrianglePoints.push_back(point1);
         leftTrianglePoints.push_back(point2);
         leftTrianglePoints.push_back(point3);
 
-        SDL_Color c{ 175, 178, 255, 255 };
-        Triangle leftTriangle(leftTrianglePoints, c);
+        SDL_Color c{ 255, 255, 255, 255 };
+        Triangle leftTriangle(leftTrianglePoints, c, true);
         allTriangles.push_back(leftTriangle);
 
-        SDL_Vertex point1a; point1a.position.x = xPos; point1a.position.y = yPos-height; point1a.tex_coord.x = 0; point1a.tex_coord.y = 0;
-        SDL_Vertex point2a; point2a.position.x = xPos+width; point2a.position.y = yPos - height; point2a.tex_coord.x = 1; point2a.tex_coord.y = 0;
-        SDL_Vertex point3a; point3a.position.x = xPos+width; point3a.position.y = yPos; point3a.tex_coord.x = 1; point3a.tex_coord.y = 1;
+        SDL_Vertex point1a; point1a.position.x = xPos; point1a.position.y = yPos-height; 
+        SDL_Vertex point2a; point2a.position.x = xPos+width; point2a.position.y = yPos - height; 
+        SDL_Vertex point3a; point3a.position.x = xPos+width; point3a.position.y = yPos; 
         std::vector<SDL_Vertex> rightTrianglePoints;
         rightTrianglePoints.push_back(point1a);
         rightTrianglePoints.push_back(point2a);
         rightTrianglePoints.push_back(point3a);
 
-        Triangle rightTriangle(rightTrianglePoints, c);
+        Triangle rightTriangle(rightTrianglePoints, c, false);
         allTriangles.push_back(rightTriangle);
 
-        currentSquare->SetAll(allTriangles, xPos, zPos, yPos, rotation, width, height);
+        if (textureFileName != nullptr) {
+            allTriangles[0].AddTexture(renderer,textureFileName);
+            allTriangles[1].AddTexture(renderer, textureFileName);
+        }
+
+        currentSquare->SetAll(allTriangles, xPos, zPos, yPos, rotation, width, height,depth);
         //squarePools.push_back(square);
 
     }
@@ -194,8 +201,12 @@ void begin_render() {
       SDL_RenderClear(renderer);
       frameCount++;
       timerFPS = SDL_GetTicks()-lastFrame;
-      if(timerFPS<(1000/setFPS)) {
-        //SDL_Delay((1000/setFPS)-timerFPS);
+      lastFrame = SDL_GetTicks();
+      printf("Timer FPS: %d \n", timerFPS);
+      if(timerFPS<(16)) {
+        //emscripten_sleep((16) - timerFPS);
+      //SDL_Delay(timerFPS);
+        
           //SDL_Delay(8);
   }
 }
@@ -233,7 +244,7 @@ void quit() {
 
 void loop() {
   end_render();
-  lastFrame = SDL_GetTicks();
+   //lastFrame = SDL_GetTicks();
   if (lastFrame >= (lastTime + 1000)) {
     lastTime = lastFrame;
     fps = frameCount;
@@ -263,27 +274,28 @@ void renderingBasics() {
 UiManager uiManager;
 
 SquareRendererPooling squareRenderer;
+
+
 void mainGame() {
-    renderingBasics();
     
    
     SDL_Rect testRect = { 0,0,100,100 };
     Text fpsText = Text(renderer, "FPS is", 100, 100);
 
-    squareRenderer.AddSquare(300, 0, 500, 0, 50, 200);
+    squareRenderer.AddSquare(300, 0, 500, 0, 50, 200, 50, nullptr);
     squareRenderer.GetSquare(0)->Set2DPos(700, 500);
-    squareRenderer.AddSquare(500, 0, 550, 0, 100, 100);
+    squareRenderer.AddSquare(500, 0, 550, 0, 100, 100,50, "res/logo.png");
     //squareRenderer.AddSquare(1500, 0, 550, 0, 100, 100);
     camera.RePosition(player.xPos, player.zPos, player.yPos);
     
 
     while (true) {
-        renderingBasics();
         uiManager.getUi(0, 1, fpsText)->SetText(std::to_string(fps));
         uiManager.renderUi();
         
 
         squareRenderer.renderSquares();
+        renderingBasics();
     }
 }
 
@@ -291,7 +303,7 @@ void startGame() {
     printf("starting the game \n");
     emscripten_cancel_main_loop();
     SDL_Delay(1000);
-    uiManager.setGroupActive(0, false);
+    //uiManager.setGroupActive(0, false);
     emscripten_set_main_loop(mainGame, 0, 1);
 }
 
@@ -337,10 +349,10 @@ void mainMenue() {
         //        break;
         //    }
         //}
-
-        renderingBasics();
+        printf("THIS LOOPS RUNNS \n");
         uiManager.renderUi();
         uiManager.getUi(0, 1, fpsText)->SetText(std::to_string(fps));
+        renderingBasics();
     }
 }
 
@@ -348,7 +360,9 @@ int numTriangles = 1;
 EM_BOOL key_callback(int eventType, const EmscriptenKeyboardEvent* e, void* userData) {
     if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "a") || e->which == 97)) {
         player.xPos -= 10 ;
+        squareRenderer.AddSquare(300, 0, 500, 0, 50, 200, 50, nullptr);
         //player.zPos -= 10;
+
      }
     if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "d") || e->which == 100)) {
         player.xPos += 10;
@@ -364,6 +378,10 @@ EM_BOOL key_callback(int eventType, const EmscriptenKeyboardEvent* e, void* user
 
     if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "r"))) {
         player.rotate(10);
+    }
+
+    if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "q"))) {
+        player.rotate(-10);
     }
 
     camera.cameraRotation = player.rotation;

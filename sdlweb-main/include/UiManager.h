@@ -91,6 +91,8 @@ SDL_Color font_color = { 255,255,255,255 };
 TTF_Font* font;
 class Text {
 public:
+    Text() {};
+
     Text(SDL_Renderer* render,std::string displayText, int x, int y) {
         this->displayText = displayText.c_str();
         this->renderer = render;
