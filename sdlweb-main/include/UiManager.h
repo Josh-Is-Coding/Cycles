@@ -56,7 +56,7 @@ public:
         this->active = true;
     }
 
-    bool ClickHandler(int mousex, int mousey) {
+    bool ClickHandler(float mousex, float mousey) {
         if (mousex < destrect.x || mousex > destrect.x + destrect.w) {
             return false;
         }
@@ -231,7 +231,7 @@ public:
         return selectedText;
     }
 
-    bool buttonClickCheck(int xMousePos, int yMousePos) {
+    bool buttonClickCheck(float xMousePos, float yMousePos) {
         for (int i = 0; i < uiGroups.size(); i++) {
             if (uiGroups[i].active == false) {
                 continue;

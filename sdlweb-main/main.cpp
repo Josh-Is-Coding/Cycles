@@ -31,8 +31,10 @@ SDL_Rect screensize;
 int frameCount, timerFPS, lastFrame,currentFrame, fps;
 int lastTime = 0;
 int setFPS = 60;
+int barWidth, barHeight;
+float scaleX, scaleY;
 SDL_Point mouse;
-int mousex, mousey = 0;
+float mousex, mousey = 0.0f;
 const Uint8* keystates;
 Uint32 mousestate;
 SDL_Event event;
@@ -123,7 +125,7 @@ public:
         leftTrianglePoints.push_back(point2);
         leftTrianglePoints.push_back(point3);
 
-        SDL_Color c{ 255, 255, 255, 255 };
+        SDL_Color c{ 255, 255, 255, 100 };
         Triangle leftTriangle(leftTrianglePoints, c, true);
         allTriangles.push_back(leftTriangle);
 
@@ -202,7 +204,6 @@ void begin_render() {
       frameCount++;
       timerFPS = SDL_GetTicks()-lastFrame;
       lastFrame = SDL_GetTicks();
-      printf("Timer FPS: %d \n", timerFPS);
       if(timerFPS<(16)) {
         //emscripten_sleep((16) - timerFPS);
       //SDL_Delay(timerFPS);
@@ -230,6 +231,24 @@ void init() {
      screensize.x=screensize.y=0;
      screensize.w=width;screensize.h=height;
      screen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height);
+
+     int windowWidth, windowHeight;
+     SDL_GetRendererOutputSize(renderer, &windowWidth, &windowHeight);
+
+     int logicalWidth, logicalHeight;
+     SDL_RenderGetLogicalSize(renderer, &logicalWidth, &logicalHeight);
+
+     scaleX = static_cast<float>(windowWidth) / logicalWidth;
+     scaleY = static_cast<float>(windowHeight) / logicalHeight;
+
+     if (scaleX > 1.0f) {
+         barWidth = (windowWidth - logicalWidth) / 2.0f;
+     }
+
+     if (scaleY > 1.0f) {
+         barHeight = (windowHeight - logicalHeight) / 2.0f;
+     }
+     
      
      TTF_Init();
      font = TTF_OpenFont("res/Garute-Black.otf", font_size);
@@ -266,8 +285,8 @@ void renderingBasics() {
     SDL_SetWindowSize(window, get_canvas_width(), get_canvas_height());
     canvasWidth = get_canvas_width();
     canvasHeight = get_canvas_height();
-    mousex = (int)(mouse.x);
-    mousey = (int)(mouse.y);
+    mousex = static_cast<float>(mouse.x);
+    mousey = static_cast<float>(mouse.y);
 }
 
 
@@ -397,18 +416,32 @@ EM_BOOL key_callback(int eventType, const EmscriptenKeyboardEvent* e, void* user
 EM_BOOL mouse_callback(int eventType, const EmscriptenMouseEvent* e, void* userData) {
     if (eventType == EMSCRIPTEN_EVENT_CLICK) {
         bool isUiButton = uiManager.buttonClickCheck(mousex, mousey);
+        printf("The x click is: %f \n", mousex);
+        printf("the y click is : %f \n", mousey);
         //printf("the mouse pos is %d , %d \n", mousex, mousey);
     }
     return 0;
 }
 
+
+
+
+bool fullScreen = false;
 EM_BOOL touch_callback(int eventType, const EmscriptenTouchEvent* e, void* userData)
 {
+    if (fullScreen == false) {
+        fullScreen = true;
+
+    }
     for (int i = 0; i < (e->numTouches)+1; ++i)
     {
-        int touchX = e->touches[i].targetX;
-        int touchY = e->touches[i].targetY;
+        float touchX = static_cast<float>(e->touches[i].targetX) - barWidth;
+        float touchY = static_cast<float>(e->touches[i].targetY) - barHeight;
+        touchX /= scaleX;
+        touchY /= scaleY;
         bool isUiButton = uiManager.buttonClickCheck(touchX, touchY);
+        printf("The xtouch is: %f \n", touchX);
+        printf("the yTouch is : %f \n", touchY);
     }
 
     return 0;
@@ -420,6 +453,7 @@ int main() {
       isMobile = EM_ASM_INT({
     return/Mobi|Android/i.test(navigator.userAgent);
           });
+
      init();//initilises variables used in the program
 
      if (isMobile == 0){
