@@ -187,6 +187,8 @@ struct PlayerData {
 	double zPos = 250;
 	double yPos = 0;
 	int rotation = 0; //In degrees, clockwise around the y axis
+	int width = 10;
+	int height = 20;
 
 	void rotate(int rotationAmount) {
 		rotation += rotationAmount;
@@ -273,15 +275,13 @@ public:
 	void renderObject(SDL_Renderer* renderer, std::vector<ObjectData*> objects, PlayerData* player, CameraData* camera) {
 		
 		int playerDirection = player->rotation % 180;
+
 		for (ObjectData* object : objects) {
 		//	ObjectData* object = objects[0];
 		
 
 			int objectRotation = object->GetRotation();
 
-			if (player->rotation % 90 != 0) {
-				//do rotated things
-			}
 
 			double distanceHorizontal = 0;
 			double distanceVertical = 0;
@@ -307,13 +307,14 @@ public:
 			double diffrenceInAngleToXAxis = atan2(diffrenceInz, diffrenceInX);
 			diffrenceInAngleToXAxis =  diffrenceInAngleToXAxis * 180 / pi;
 			diffrenceInAngleToXAxis = diffrenceInAngleToXAxis - (camera->cameraRotation%360);
+			printf("The angel to camera is: %f \n", diffrenceInAngleToXAxis);
 			if (diffrenceInAngleToXAxis > 180) {
 				diffrenceInAngleToXAxis = -180 + (diffrenceInAngleToXAxis - 180);
 			}
 			else if (diffrenceInAngleToXAxis < -180) {
 				diffrenceInAngleToXAxis = 180 + (diffrenceInAngleToXAxis + 180);
 			}
-			else if (diffrenceInAngleToXAxis == 180) {
+			else if (diffrenceInAngleToXAxis == 180 || diffrenceInAngleToXAxis == -180) {
 				diffrenceInAngleToXAxis = 179.9;
 			}
 			//printf("The angle is after: %f \n", diffrenceInAngleToXAxis);
