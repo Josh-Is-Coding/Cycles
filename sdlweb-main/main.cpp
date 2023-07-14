@@ -15,6 +15,7 @@
 #include <emscripten/html5.h>
 #include <UiManager.h>
 #include <chrono>
+#include <thread>
 #include <3DRendering.h>
 #include <emscripten/websocket.h>
 
@@ -41,7 +42,8 @@ Uint32 mousestate;
 SDL_Event event;
 bool running;
 SDL_Color bkg = { 14, 149, 148};
-PlayerData player;
+SDL_Rect playerRect = { width / 2 - 20, height / 2 - 40,40,80 };
+PlayerData player(playerRect);
 CameraData camera;
 
 
@@ -298,15 +300,15 @@ SquareRendererPooling squareRenderer;
 
 void mainGame() {
     
-   
-    SDL_Rect testRect = { 0,0,100,100 };
+    
+    
     Text fpsText = Text(renderer, "FPS is", 100, 100);
     StaticImage test = StaticImage(renderer, "res/logo.png", width/2  -20 , height/2 - 40, 40, 80, 1980, 1080);
 
     squareRenderer.AddSquare(300, 0, 500, 0, 50, 200, 50, nullptr);
     squareRenderer.GetSquare(0)->Set2DPos(700, 500);
     squareRenderer.AddSquare(0, 0, 0, 0, 50, 50, 50, nullptr);
-    squareRenderer.AddSquare(500, 0, 550, 0, 100, 100,50, "res/logo.png");
+    squareRenderer.AddSquare(500, 0, 550, 0, 100, 100,50, "res/logo2.png");
     //squareRenderer.AddSquare(1500, 0, 550, 0, 100, 100);
     
     camera.RePosition(player.xPos, player.zPos, player.yPos);
@@ -320,9 +322,12 @@ void mainGame() {
     while (true) {
         uiManager.getUi(0, 1, fpsText)->SetText(std::to_string(fps));
         uiManager.getUi(1, 0, fpsText)->SetText(std::to_string(player.xPos) + std::to_string(player.zPos));
+
         uiManager.renderUi();
         
-
+        player.moveForward(0.1);
+        camera.cameraRotation = player.rotation;
+        camera.RePosition(player.xPos, player.zPos, player.yPos);
         squareRenderer.renderSquares();
         renderingBasics();
     }
@@ -385,6 +390,14 @@ void mainMenue() {
     }
 }
 
+void Rotate(int rotationAmount) {
+    player.rotate(rotationAmount);
+
+    while (player.rotation % 90 != 0) {
+        player.rotate(rotationAmount);
+   }
+}
+
 int numTriangles = 1;
 EM_BOOL key_callback(int eventType, const EmscriptenKeyboardEvent* e, void* userData) {
     if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "a") || e->which == 97)) {
@@ -406,11 +419,11 @@ EM_BOOL key_callback(int eventType, const EmscriptenKeyboardEvent* e, void* user
     }
 
     if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "e"))) {
-        player.rotate(-90);
+        Rotate(-10);
     }
 
     if (eventType == EMSCRIPTEN_EVENT_KEYPRESS && (!strcmp(e->key, "q"))) {
-        player.rotate(90);
+        Rotate(10);
     }
 
     camera.cameraRotation = player.rotation;

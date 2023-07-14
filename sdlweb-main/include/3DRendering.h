@@ -189,6 +189,11 @@ struct PlayerData {
 	int rotation = 0; //In degrees, clockwise around the y axis
 	int width = 10;
 	int height = 20;
+	SDL_Rect playerRect;
+
+	PlayerData(SDL_Rect playerRect){
+		this->playerRect = playerRect;
+	}
 
 	void rotate(int rotationAmount) {
 		rotation += rotationAmount;
@@ -255,17 +260,17 @@ public:
 	WorldObjectRenderer(SDL_Renderer* renderer, int screenWidth, int screenHight) {
 		this->renderer = renderer;
 		this->screenHight = screenHight;
-		this->screenMidHeight = screenHight / 2;
+		this->screenMidHeight = (double)screenHight / 2;
 		this->screenWidth = screenWidth;
-		this->screenMidWidth = screenWidth / 2;
+		this->screenMidWidth = (double)screenWidth / 2;
 		
 		worldToScreenX = 500 / screenWidth;
 		scalingFactor = 0.5f;
 	}
 
-	double DistanceCalculator(int xpos1, int ypos1, int xpos2, int ypos2) {
-		int xSquared = std::pow(xpos2 - xpos1, 2);
-		int ySquared = std::pow(ypos2 - ypos1, 2);
+	double DistanceCalculator(double xpos1, double ypos1, double xpos2, double ypos2) {
+		double xSquared = std::pow(xpos2 - xpos1, 2);
+		double ySquared = std::pow(ypos2 - ypos1, 2);
 		double distance = std::sqrt(xSquared + ySquared);
 		return distance;
 	}
@@ -307,7 +312,7 @@ public:
 			double diffrenceInAngleToXAxis = atan2(diffrenceInz, diffrenceInX);
 			diffrenceInAngleToXAxis =  diffrenceInAngleToXAxis * 180 / pi;
 			diffrenceInAngleToXAxis = diffrenceInAngleToXAxis - (camera->cameraRotation%360);
-			printf("The angel to camera is: %f \n", diffrenceInAngleToXAxis);
+
 			if (diffrenceInAngleToXAxis > 180) {
 				diffrenceInAngleToXAxis = -180 + (diffrenceInAngleToXAxis - 180);
 			}
@@ -390,8 +395,8 @@ public:
 private:
 	SDL_Renderer* renderer;
 	int screenWidth;
-	int screenMidWidth;
-	int screenHight;
+	double screenMidWidth;
+	double screenHight;
 	int screenMidHeight;
 	double pi = 3.14;
 	float worldToScreenX;

@@ -104,16 +104,16 @@ public:
 
     void SetText(std::string newText) {
         this->displayText = newText.c_str();
+        SDL_DestroyTexture(text_texture);
         text_surface = TTF_RenderText_Blended(font, this->displayText, font_color);
         text_texture = SDL_CreateTextureFromSurface(renderer, text_surface);
-        text_texture = SDL_CreateTextureFromSurface(renderer, text_surface);
+        SDL_FreeSurface(text_surface);
         textRect = { textRect.x, textRect.y, text_surface->w, text_surface->h };
+        
     }
 
-    void Draw() {
-        SDL_FreeSurface(text_surface);
+    void Draw() {    
         SDL_RenderCopy(renderer, text_texture, NULL, &textRect);
-        //SDL_DestroyTexture(text_texture);
     }
 private:
     const char* displayText;
